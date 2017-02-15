@@ -6,28 +6,32 @@ import (
   "encoding/json"
   "fmt"
 )
-var openWeatherKey string = ""
+var mySecret string = "abc" // master api key set to your choice and pass in as token
+var openWeatherKey string = "" // Set this to your api key
 var city string
+var token string
 
 func reqHandler(w http.ResponseWriter, r *http.Request) {
-  city = mux.Vars(r)["city"]
-  if(openWeatherKey=="") {
-    fmt.Println("api key required")
-  }
-  resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+openWeatherKey)
-  if err != nil {
-    log.Fatal(err)
-  }
+  token := r.URL.Query().Get("token")
+  if(token==mySecret) {
+    city = mux.Vars(r)["city"]
+    if(openWeatherKey=="") {
+      fmt.Println("api key required")
+    }
+    resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+openWeatherKey)
+    if err != nil {
+      log.Fatal(err)
+    }
 
-  var generic map[string]interface{}
-  err = json.NewDecoder(resp.Body).Decode(&generic)
-  if err != nil {
-    log.Fatal(err)
+    var generic map[string]interface{}
+    err = json.NewDecoder(resp.Body).Decode(&generic)
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(generic)
   }
-
-  w.Header().Set("Content-Type", "application/json")
-  json.NewEncoder(w).Encode(generic)
-
 }
 
 func main() {
